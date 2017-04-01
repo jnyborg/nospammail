@@ -10,20 +10,22 @@ def __generatePrefix():
 
     return tempEmail
 
-def generateRandomEmail():
-    emailSuffix = "@nospamemail.org"
-
+def __emailIsUnique(email):
     takenEmails = []
     for n in range(30):
         takenEmails.insert(n, __generatePrefix())
 
+    #print(email + " taken: " + str(email in takenEmails))
+    return not email in takenEmails
+
+def generateRandomEmail():
+    emailSuffix = "@nospamemail.org"
+
     newEmail = __generatePrefix()
 
-    while(newEmail in takenEmails):
-        #print(newEmail + " taken: " + str(newEmail in takenEmails))
+    while not __emailIsUnique(newEmail):
         newEmail = __generatePrefix()
 
-    #print(newEmail + " taken: " + str(newEmail in takenEmails))
     return newEmail + emailSuffix
 
 if __name__ == "__main__":
