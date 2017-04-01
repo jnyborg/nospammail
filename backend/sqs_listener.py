@@ -1,5 +1,6 @@
 import boto3
 import json
+from backend.email_processor import processEmail
 
 client = boto3.setup_default_session(region_name='eu-west-1')
 
@@ -19,10 +20,7 @@ while True:
             if author_name:
                 author_text = " ({0})".format(author_name)
 
-        #print("Full message: {0}!{1}".format(message.body, author_text))
-        messageJson = json.loads(message.body)
-        print("Subject: %s" % messageJson['Subject'])
-        print("Message: %s" % messageJson['Message'])
+        processEmail(json.loads(message.body))
 
         message.delete()
         #break Used for the else statement
