@@ -2,8 +2,7 @@ import json
 import smtplib
 
 def processEmail(message):
-    print("message: %s" % message)
-    print("dumped: %s" % json.dumps(message))
+    #print("message: %s" % message)
     d = json.loads(message['Message'])
     #print("d: %s" % d)
     m = d['mail']
@@ -34,5 +33,5 @@ def processEmail(message):
         smtpObj = smtplib.SMTP(host="nospammail.org", port=25, local_hostname="localhost")
         smtpObj.sendmail(sender, receivers, msg)
         print("Successfully sent email!")
-    except smtplib.SMTPException:
-        print("ERROR, email not sent!")
+    except smtplib.SMTPException as e:
+        print("ERROR: %s: %s" % e.errno, e.strerror)
