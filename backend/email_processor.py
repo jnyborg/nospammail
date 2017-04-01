@@ -22,7 +22,7 @@ def processEmail(message):
     subject = m['commonHeaders']['subject']
     print("subject: %s" % subject)
 
-    actualEmail = "alexander@svejbaekgaard.dk"
+    actualEmail = "jnyborg@outlook.com"
 
     sender = destinations[0]
     receivers = [ actualEmail ]
@@ -30,7 +30,7 @@ def processEmail(message):
     msg = d['content']
 
     try:
-        smtpObj = smtplib.SMTP(host="nospammail.org", port=25, local_hostname="localhost")
+        smtpObj = smtplib.SMTP('localhost', 25)
         smtpObj.sendmail(sender, receivers, msg)
         print("Successfully sent email!")
     except smtplib.SMTPException as e:
