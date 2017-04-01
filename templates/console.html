@@ -1,6 +1,18 @@
 {% extends 'base.html' %}
 
+{% block javascript %}
+  <script>
+    $("#generate_email").change(function () {
+      console.log("hello");
+    });
+  </script>
+{% endblock %}
+
 {% block content %}
     <h1>Settings Console</h1>
+    Welcome {{ user.get_username }}!
     <a href="/logout">Log out</a>
+
+    <input id="generate_email" type="button" value="Click" />
+
 {% endblock %}

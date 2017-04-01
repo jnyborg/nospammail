@@ -10,4 +10,8 @@ def index(request):
 
 
 
+def request_page(request):
+  if(request.GET.get('mybtn')):
+      print(request.GET.get('mytextbox'))
+  return render(request,'console.html')
 
