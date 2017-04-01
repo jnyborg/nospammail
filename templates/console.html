@@ -1,18 +1,61 @@
 {% extends 'base.html' %}
 
-{% block javascript %}
-  <script>
-    $("#generate_email").change(function () {
-      console.log("hello");
-    });
-  </script>
-{% endblock %}
 
 {% block content %}
     <h1>Settings Console</h1>
     Welcome {{ user.get_username }}!
     <a href="/logout">Log out</a>
 
-    <input id="generate_email" type="button" value="Click" />
+    <form>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input class="form-control" id="description" type="text">
+            <label for="generated_result">Generated Email</label>
+            <input class="form-control" id="generated_result" type="text" readonly>
+        </div>
+        <button class="btn btn-default" id="generate_email" type="button">Generate Email</button>
+        <button class="btn btn-success" id="add_email" type="button">Add</button>
+    </form>
 
+    <div id="emailList">
+        {% include "console_list.html" %}
+    </div>
+
+    <script>
+        $("#generate_email").click(function () {
+            $.ajax({
+                url: '/ajax/generate_email/',
+                dataType: 'json',
+                success: function (data) {
+                    $("#generated_result").val(data.generated_email)
+                }
+            });
+        });
+
+        $("#add_email").click(function () {
+            $.ajax({
+                url: '/ajax/add_email/',
+                dataType: 'json',
+                data: {
+                    "description": $("#description").val()
+                },
+                // stupid shit
+                error: function (data) {
+                    $("#emailList").html(data.responseText)
+                }
+
+            });
+        });
+        function toggleEmail(id) {
+            $.ajax({
+                url: '/ajax/toggle_email/',
+                data: {
+                    "id": id
+                },
+                success: function (data) {
+                    $("#emailList").html(data)
+                }
+            });
+        }
+    </script>
 {% endblock %}

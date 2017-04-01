@@ -1,0 +1,28 @@
+{% if generated_emails %}
+    <table class="table table-striped">
+        <tr>
+            <th>Description</th>
+            <th>Email</th>
+            <th>Toggle</th>
+        </tr>
+        {% for generated_email in generated_emails %}
+            <tr>
+                <td>{{ generated_email.description }}</td>
+                <td>{{ generated_email.email }}</td>
+                <td>
+                    <div class="checkbox">
+                        <label>
+                            {% if generated_email.enabled %}
+                                <input type="checkbox" checked onchange="toggleEmail({{ generated_email.id }})">
+                            {% else %}
+                                <input type="checkbox" onchange="toggleEmail({{ generated_email.id }})">
+                            {% endif %}
+                        </label>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>You have not created any emails.</p>
+{% endif %}
