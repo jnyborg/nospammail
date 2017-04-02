@@ -27,8 +27,8 @@ def processEmail(message):
     try:
         conn = psycopg2.connect("dbname='nospammail' " \
                                 "user='nospammail' " \
-                                "host={}" \
-                                "password={}".format(
+                                "host='{}'" \
+                                "password='{}'".format(
                                         os.environ.get('NOSPAMMAIL_HOST', False),
                                         os.environ.get('NOSPAMMAIL_PW', False)))
 
