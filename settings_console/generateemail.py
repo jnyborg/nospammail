@@ -32,7 +32,7 @@ def __emailIsUnique(email):
     return False
 
 def generateRandomEmail():
-    emailSuffix = "@nospamemail.org"
+    emailSuffix = "@nospammail.org"
 
     newEmail = __generatePrefix()
 

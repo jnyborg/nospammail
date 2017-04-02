@@ -22,7 +22,7 @@
     </div>
 
     <script>
-        $("#generate_email").click(function () {
+        function generateEmail() {
             $.ajax({
                 url: '/ajax/generate_email/',
                 dataType: 'json',
@@ -30,6 +30,9 @@
                     $("#generated_result").val(data.generated_email)
                 }
             });
+        }
+        $("#generate_email").click(function () {
+            generateEmail();
         });
 
         $("#add_email").click(function () {
@@ -41,7 +44,9 @@
                 },
                 // stupid shit
                 error: function (data) {
-                    $("#emailList").html(data.responseText)
+                    $("#emailList").html(data.responseText);
+                    generateEmail();
+                    $("#description").val("")
                 }
 
             });

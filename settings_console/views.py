@@ -7,7 +7,7 @@ from settings_console.models import GeneratedEmail, GeneratedEmailForm
 
 def index(request):
     if request.user.is_authenticated:
-        generated_emails = GeneratedEmail.objects.all()
+        generated_emails = GeneratedEmail.objects.filter(user_id=request.user.id)
         return render(request, 'console.html', context = {"generated_emails": generated_emails})
     else:
         return render(request, 'frontpage.html')
@@ -26,7 +26,8 @@ def add_generated_email(request):
                        email=request.session['generated_email'],
                        user=request.user)
     g.save()
-    return render_to_response('console_list.html', {"generated_emails": GeneratedEmail.objects.all()})
+    return render_to_response('console_list.html',
+                              {"generated_emails": GeneratedEmail.objects.filter(user_id=request.user.id)})
 
 
 def toggle_email(request):
@@ -35,7 +36,8 @@ def toggle_email(request):
         g = GeneratedEmail.objects.get(id=email_id)
         g.enabled = not g.enabled
         g.save()
-    return render_to_response('console_list.html', {"generated_emails": GeneratedEmail.objects.all()})
+    return render_to_response('console_list.html',
+                              {"generated_emails": GeneratedEmail.objects.filter(user_id=request.user.id)})
 
 
 
