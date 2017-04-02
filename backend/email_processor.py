@@ -33,7 +33,7 @@ def processEmail(message):
                                         os.environ.get('NOSPAMMAIL_PW', False)))
 
         cur = conn.cursor()
-        cur.execute("select g.enabled as enabled, u.email as email from settings_console_generatedemail as g left join auth_user as u on g.id = u.user_id where g.email={};".format(destinations[0]))
+        cur.execute("select g.enabled as enabled, u.email as email from settings_console_generatedemail as g left join auth_user as u on g.user_id = u.id where g.email='{}';".format(destinations[0]))
         rows = cur.fetchall()
 
         if len(rows) <= 0:
