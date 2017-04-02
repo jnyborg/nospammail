@@ -10,19 +10,19 @@ def processEmail(message):
     m = d['mail']
     #print("m: %s" % m)
     source = m['source']
-    print("source: %s" % source)
+    #print("source: %s" % source)
     destinations = m['destination']
     destinationsPrefix = map(lambda x: x.split('@')[0], destinations)
-    print("destinations:")
+    #print("destinations:")
     for des in destinations:
         print(des)
 
-    print("destinationsPre:")
+    #print("destinationsPre:")
     for des in destinationsPrefix:
         print(des)
 
     subject = m['commonHeaders']['subject']
-    print("subject: %s" % subject)
+    #print("subject: %s" % subject)
 
     try:
         conn = psycopg2.connect("dbname='nospammail' " \
@@ -40,10 +40,9 @@ def processEmail(message):
             print("Error, {} has no owner!".format(destinations[0]))
             return
         else:
-            if rows[0]['enabled']:
+            if rows[0][0]:
                 sender = destinations[0]
-                receivers = [rows[0]['email']]
-                print(m)
+                receivers = [rows[0][1]]
                 msg = d['content']
 
                 try:
@@ -55,7 +54,7 @@ def processEmail(message):
             else:
                 print("Email linked to {} has disabled forwarding.".format(destinations[0]))
     except:
-        print("Unable to connect to database!")
+        print("Unable to connect to DB: %s: %s" % e.errno, e.strerror)
 
 
 
