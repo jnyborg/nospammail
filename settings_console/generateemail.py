@@ -10,7 +10,7 @@ def __generatePrefix():
     for num in range(10):
         tempEmail += allowedCharacters[random.randint(0, len(allowedCharacters) - 1)]
 
-    return tempEmail
+    return tempEmail + "@nospammail.org"
 
 def __emailIsUnique(email):
     try:
@@ -25,22 +25,20 @@ def __emailIsUnique(email):
         cur.execute("select * from settings_console_generatedemail as g where g.email='{}';".format(email))
         rows = cur.fetchall()
 
-        return len(rows <= 0)
+        return len(rows) <= 0
     except Exception as e:
         print("Unable to connect to DB: %s: %s" % e.errno, e.strerror)
 
     return False
 
 def generateRandomEmail():
-    emailSuffix = "@nospammail.org"
-
     newEmail = __generatePrefix()
 
     while not __emailIsUnique(newEmail):
-        print("Email {} was not uinque!".format(newEmail))
+        #print("Email {} was not uinque!".format(newEmail))
         newEmail = __generatePrefix()
 
-    return newEmail + emailSuffix
+    return newEmail
 
 if __name__ == "__main__":
     print(generateRandomEmail())
