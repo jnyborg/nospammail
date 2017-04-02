@@ -53,7 +53,7 @@ def processEmail(message):
                     print("ERROR: %s: %s" % e.errno, e.strerror)
             else:
                 print("Email linked to {} has disabled forwarding.".format(destinations[0]))
-    except:
+    except Exception as e:
         print("Unable to connect to DB: %s: %s" % e.errno, e.strerror)
 
 

@@ -1,5 +1,7 @@
 import string
 import random
+import psycopg2
+import os
 
 def __generatePrefix():
     allowedCharacters = string.ascii_lowercase + "".join(map(str, range(10)))
@@ -11,12 +13,23 @@ def __generatePrefix():
     return tempEmail
 
 def __emailIsUnique(email):
-    takenEmails = []
-    for n in range(30):
-        takenEmails.insert(n, __generatePrefix())
+    try:
+        conn = psycopg2.connect("dbname='nospammail' " \
+                                "user='nospammail' " \
+                                "host='{}'" \
+                                "password='{}'".format(
+                                        os.environ.get('NOSPAMMAIL_HOST', False),
+                                        os.environ.get('NOSPAMMAIL_PW', False)))
 
-    #print(email + " taken: " + str(email in takenEmails))
-    return not email in takenEmails
+        cur = conn.cursor()
+        cur.execute("select * from settings_console_generatedemail as g where g.email='{}';".format(email))
+        rows = cur.fetchall()
+
+        return len(rows <= 0)
+    except Exception as e:
+        print("Unable to connect to DB: %s: %s" % e.errno, e.strerror)
+
+    return False
 
 def generateRandomEmail():
     emailSuffix = "@nospamemail.org"
@@ -24,6 +37,7 @@ def generateRandomEmail():
     newEmail = __generatePrefix()
 
     while not __emailIsUnique(newEmail):
+        print("Email {} was not uinque!".format(newEmail))
         newEmail = __generatePrefix()
 
     return newEmail + emailSuffix
