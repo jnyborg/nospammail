@@ -1,14 +1,14 @@
 import boto3
 import json
-from multiprocessing.dummy import Pool as ThreadPool
 import os
 import sys
 import threading
+from multiprocessing.dummy import Pool as ThreadPool
 
 from email_processor import processEmail
 
 def ListenForMails():
-    THREAD_COUNT = os.cpu_count() - 1  # Leave dedicated thread for listener
+    THREAD_COUNT = max(os.cpu_count() - 1, 4)  # Leave dedicated thread for listener, minimum of 4 threads though
 
     try:
         threadArg = int(sys.argv[1]) # First argument overrides thread pool size
