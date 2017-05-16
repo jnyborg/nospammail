@@ -10,11 +10,8 @@
         <div class="form-group">
             <label for="description">Description</label>
             <input class="form-control" id="description" type="text">
-            <label for="generated_result">Generated Email</label>
-            <input class="form-control" id="generated_result" type="text" readonly>
         </div>
-        <button class="btn btn-default" id="generate_email" type="button">Generate Email</button>
-        <button class="btn btn-success" id="add_email" type="button">Add</button>
+        <button class="btn btn-success" id="add_email" type="button">Add new email</button>
     </form>
 
     <div id="emailList">
@@ -22,19 +19,6 @@
     </div>
 
     <script>
-        function generateEmail() {
-            $.ajax({
-                url: '/ajax/generate_email/',
-                dataType: 'json',
-                success: function (data) {
-                    $("#generated_result").val(data.generated_email)
-                }
-            });
-        }
-        $("#generate_email").click(function () {
-            generateEmail();
-        });
-
         $("#add_email").click(function () {
             $.ajax({
                 url: '/ajax/add_email/',
@@ -45,7 +29,6 @@
                 // stupid shit
                 error: function (data) {
                     $("#emailList").html(data.responseText);
-                    generateEmail();
                     $("#description").val("")
                 }
 
