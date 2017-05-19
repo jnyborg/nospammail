@@ -1,5 +1,6 @@
 from django.forms import EmailField, forms
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -12,11 +13,15 @@ class UserCreationForm(UserCreationForm):
         model = User
         fields = ("username", "email", "password1", "password2")
 
-    def clean_email(self):
-        email = self.cleaned_data["email"]
-        if "@nospammail.org" in email:
-            raise forms.ValidationError("You cannot register using a nospammail address!")
-        return email
+    def clean(self):
+        cleaned_data = super(UserCreationForm, self).clean()
+
+        if cleaned_data.get("email"):
+            email = cleaned_data["email"]
+
+            if "@nospammail.org" in email:
+                raise ValidationError("You cannot register using a nospammail address!")
+            return cleaned_data
 
     def save(self, commit=True):
         user = super(UserCreationForm, self).save(commit=False)

@@ -49,8 +49,10 @@ def processEmail(message):
                     print("ERROR: %s: %s" % e.errno, e.strerror)
             else:
                 print("Email linked to {} has disabled forwarding.".format(destinations[0]))
-    except Exception as e:
-        if hasattr(e, 'reason'):
+    except psycopg2.Error as e:
+        if hasattr(e, 'reason') and hasattr(e, 'code'):
+            print("Unable to connect to DB, error code: {}, error reason: {}".format(e.code, e.reason))
+        elif hasattr(e, 'reason'):
             print("Unable to connect to DB, error reason: {}".format(e.reason))
         elif hasattr(e, 'code'):  # <--
             print("Unable to connect to DB, error code: {}".format(e.code))
@@ -58,3 +60,12 @@ def processEmail(message):
             print("Unable to connect to DB: {}: {}".format(e.errno, e.strerror))
         else:
             print("Unable to connect to DB: unspecified error: {}".format(str(e)))
+    except Exception as e:
+        if hasattr(e, 'reason'):
+            print("Undefined exception, error reason: {}".format(e.reason))
+        elif hasattr(e, 'code'):  # <--
+            print("Undefined exception, error code: {}".format(e.code))
+        elif hasattr(e, 'errno'):
+            print("Undefined exception: {}: {}".format(e.errno, e.strerror))
+        else:
+            print("UUndefined exception: unspecified error: {}".format(str(e)))
