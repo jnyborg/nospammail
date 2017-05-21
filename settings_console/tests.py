@@ -31,6 +31,14 @@ def logOut(self):
 
     self.client.post("/logout/")
 
+def addEmail(self, description):
+
+    self.client.get("/ajax/add_email/", data={'description': description})
+
+def toggleEmail(self, id):
+
+    self.client.get("/ajax/toggle_email/", data={'id': id})
+
 class TestEmailGeneration(TestCase):
 
     def test_shouldBeAbleToGenerateEmailWhileLoggedIn(self):
@@ -40,7 +48,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
 
@@ -53,7 +61,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription + "1" })
+        addEmail(self, validEmailDescription)
 
         user = auth.get_user(self.client)
         emails = GeneratedEmail.objects.filter(user_id=user.id)
@@ -65,7 +73,7 @@ class TestEmailGeneration(TestCase):
         Users should not be able to generate a new email while not logged in
         """
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
         self.assertTrue(len(emails) == 0, "Generated email for unauthorized user")
@@ -80,7 +88,7 @@ class TestEmailGeneration(TestCase):
         emailsToGenerate = 5
 
         for i in range(emailsToGenerate):
-            self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription + str(i) })
+            addEmail(self, validEmailDescription + str(i))
 
         emails = GeneratedEmail.objects.all()
         self.assertTrue(len(emails) == emailsToGenerate, "Failed to generate multiple emails")
@@ -93,7 +101,7 @@ class TestEmailGeneration(TestCase):
         registerAndLogin(self)
 
         for i in range(2):
-            self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+            addEmail(self, validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
 
@@ -107,12 +115,12 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         email = GeneratedEmail.objects.all()[0]
 
         initialState = email.enabled
-        self.client.get("/ajax/toggle_email/", data={ 'id': email.id})
+        toggleEmail(self, email.id)
 
         newState = GeneratedEmail.objects.all()[0].enabled
 
@@ -125,13 +133,13 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         email = GeneratedEmail.objects.all()[0]
 
         initialState = email.enabled
-        self.client.get("/ajax/toggle_email/", data={ 'id': email.id})
-        self.client.get("/ajax/toggle_email/", data={ 'id': email.id})
+        toggleEmail(self, email.id)
+        toggleEmail(self, email.id)
 
         newState = GeneratedEmail.objects.all()[0].enabled
 
@@ -144,18 +152,18 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         logOut(self)
 
         registerAndLogin(self, validUsername + "1", validPassword + "1", "1" + validEmail)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         email = GeneratedEmail.objects.all().order_by("-id")[1] # Emails ordered by id ascending
 
         initialState = email.enabled
-        self.client.get("/ajax/toggle_email/", data={ 'id': email.id})
+        toggleEmail(self, email.id)
 
         newState = GeneratedEmail.objects.all()[0].enabled
 
@@ -168,15 +176,34 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        self.client.get("/ajax/add_email/", data={ 'description': validEmailDescription })
+        addEmail(self, validEmailDescription)
 
         logOut(self)
 
         email = GeneratedEmail.objects.all()[0]
 
         initialState = email.enabled
-        self.client.get("/ajax/toggle_email/", data={ 'id': email.id})
+        toggleEmail(self, email.id)
 
         newState = GeneratedEmail.objects.all()[0].enabled
 
         self.assertEqual(initialState, newState, "Illegally changed forwarding setting after logging out")
+
+    def test_emailsGeneratedFromDifferentUsersShouldHaveDifferentUserId(self):
+        """
+        Emails generated from different users should have different user ids
+        """
+
+        registerAndLogin(self)
+
+        addEmail(self, validEmailDescription)
+
+        logOut(self)
+
+        registerAndLogin(self, validUsername + "1", validPassword + "1", "1" + validEmail)
+        addEmail(self, validEmailDescription)
+
+        email1 = GeneratedEmail.objects.all()[0]
+        email2 = GeneratedEmail.objects.all()[1]
+
+        self.assertNotEqual(email1.user_id, email2.user_id, "Different users generated emails with same user id")
