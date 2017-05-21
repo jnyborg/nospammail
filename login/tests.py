@@ -3,6 +3,7 @@ from login.forms import UserCreationForm
 from django.core.urlresolvers import reverse
 from django.contrib import auth
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 validUsername = "testuser"
 validEmail = "testuser@gmail.com"
@@ -89,6 +90,45 @@ class TestInputValidation(TestCase):
 
         self.client.post(reverse('signup'), { 'username': validUsername, 'email': "", 'password1': validPassword, 'password2': validPassword})
 
+        user = auth.get_user(self.client)
+
+        self.assertFalse(user.is_authenticated())
+
+    def test_cannotRegisterWithEmptyPassword1(self):
+        """
+        User cannot register with empty password1
+        """
+
+        self.client.post(reverse('signup'), { 'username': validUsername, 'email': validEmail, 'password1': "", 'password2': validPassword})
+
+        user = auth.get_user(self.client)
+
+        self.assertFalse(user.is_authenticated())
+
+    def test_cannotRegisterWithEmptyPassword2(self):
+        """
+        User cannot register with empty password2
+        """
+
+        self.client.post(reverse('signup'), { 'username': validUsername, 'email': validEmail, 'password1': validPassword, 'password2': ""})
+
+        user = auth.get_user(self.client)
+
+        self.assertFalse(user.is_authenticated())
+
+    def test_registeredUserCanLogIn(self):
+
+        User.objects.create_user(validUsername, validEmail, validPassword)
+
+        params = {'username': validUsername, 'password': validPassword}
+        self.client.post("/login/", data=params)
+        user = auth.get_user(self.client)
+
+        self.assertTrue(user.is_authenticated())
+
+    def test_unregisteredUserCannotLogIn(self):
+        params = {'username': validUsername, 'password': validPassword}
+        self.client.post("/login/", data=params)
         user = auth.get_user(self.client)
 
         self.assertFalse(user.is_authenticated())
