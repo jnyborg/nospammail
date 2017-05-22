@@ -3,6 +3,7 @@ from django.shortcuts import render, render_to_response
 from settings_console.generateemail import generateRandomEmail
 from settings_console.models import GeneratedEmail
 from django.http import HttpResponse
+from http import HTTPStatus
 
 from enum import Enum
 
@@ -27,7 +28,7 @@ def add_generated_email(request):
                                    "error_message": "Please enter a description."})
 
     if not request.user or not request.user.is_authenticated():
-        return HttpResponse("You must log in before proceeding.", status=401)
+        return HttpResponse("You must log in before proceeding.", status=HTTPStatus.UNAUTHORIZED)
 
     g = GeneratedEmail(description=description,
                        email=generateRandomEmail(),
@@ -43,7 +44,7 @@ def toggle_email(request):
     if email_id != None:
         g = GeneratedEmail.objects.get(id=email_id)
         if g.user.id != request.user.id:
-            return HttpResponse("You do not have permission to do this.", status=401)
+            return HttpResponse("You do not have permission to do this.", status=HTTPStatus.UNAUTHORIZED)
 
         g.enabled = not g.enabled
         g.save()
