@@ -1,6 +1,10 @@
 # nospammail
 AU Hack 2017 project
 
+## Prerequisites
+1. Postgres
+2. Python
+
 ## Install
 ```
 mkvirtualenv --python=$(which python3) nospammail
