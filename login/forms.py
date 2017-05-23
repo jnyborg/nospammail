@@ -20,7 +20,9 @@ class UserCreationForm(UserCreationForm):
             email = cleaned_data["email"]
 
             if "@nospammail.org" in email:
-                raise ValidationError("You cannot register using a nospammail address!")
+                raise ValidationError("You cannot register using a nospammail address.")
+            elif User.objects.filter(email=email).exists():
+                raise forms.ValidationError("A user with that email address already exists.")
             return cleaned_data
 
     def save(self, commit=True):

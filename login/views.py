@@ -1,7 +1,7 @@
 from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect
 from login.forms import UserCreationForm
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
 from nospammail.urls import anonymous_required
 from http import HTTPStatus
 

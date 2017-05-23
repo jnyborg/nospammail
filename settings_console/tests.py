@@ -4,39 +4,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from settings_console.models import GeneratedEmail
 from http import HTTPStatus
-
-validUsername = "testuser"
-validEmail = "testuser@gmail.com"
-validPassword = "secretpass333"
-validEmailDescription = "This is a valid description"
-validUsername2 = "testuser2"
-validEmail2 = "testuser2@gmail.com"
-validPassword2 = "secretpass444"
-validEmailDescription2 = "This is a valid description2"
-
-def registerAndLogin(self, username=None, password=None, email=None):
-    if username == None or password == None or email == None:
-        _username = validUsername
-        _password = validPassword
-        _email = validEmail
-    else:
-        _username = username
-        _password = password
-        _email = email
-
-
-    self.client.post(reverse('signup'), { 'username': _username, 'email': _email, 'password1': _password, 'password2': _password})
-
-    return logIn(self, _username, _password)
-
-def logIn(self, username, password):
-
-    params = {'username': username, 'password': password}
-    return self.client.post(reverse('login'), data=params)
-
-def logOut(self):
-
-    return self.client.post("/logout/")
+from login.tests import *
 
 def addEmail(self, description):
 
@@ -163,7 +131,7 @@ class TestEmailGeneration(TestCase):
 
         logOut(self)
 
-        registerAndLogin(self, validUsername2, validPassword2, validEmail2)
+        registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
 
         addEmail(self, validEmailDescription)
 
@@ -207,7 +175,7 @@ class TestEmailGeneration(TestCase):
 
         logOut(self)
 
-        registerAndLogin(self, validUsername2, validPassword2, validEmail2)
+        registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
         addEmail(self, validEmailDescription)
 
         email1 = GeneratedEmail.objects.all()[0]
