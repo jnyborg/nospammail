@@ -21,7 +21,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         emails = GeneratedEmail.objects.all()
 
@@ -34,7 +34,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         user = auth.get_user(self.client)
         emails = GeneratedEmail.objects.filter(user_id=user.id)
@@ -46,7 +46,7 @@ class TestEmailGeneration(TestCase):
         Users should not be able to generate a new email while not logged in
         """
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         emails = GeneratedEmail.objects.all()
         self.assertTrue(len(emails) == 0, "Generated email for unauthorized user")
@@ -74,7 +74,7 @@ class TestEmailGeneration(TestCase):
         registerAndLogin(self)
 
         for i in range(2):
-            addEmail(self, description=validEmailDescription)
+            addEmail(self)
 
         emails = GeneratedEmail.objects.all()
 
@@ -88,7 +88,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         email = GeneratedEmail.objects.all()[0]
 
@@ -106,7 +106,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         email = GeneratedEmail.objects.all()[0]
 
@@ -125,13 +125,13 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         logOut(self)
 
         registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         email = GeneratedEmail.objects.all().order_by("-id")[1] # Emails ordered by id ascending
 
@@ -149,7 +149,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         logOut(self)
 
@@ -174,7 +174,7 @@ class TestEmailGeneration(TestCase):
         logOut(self)
 
         registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
-        addEmail(self, description=validEmailDescription)
+        addEmail(self)
 
         email1 = GeneratedEmail.objects.all()[0]
         email2 = GeneratedEmail.objects.all()[1]
@@ -196,7 +196,7 @@ class TestEmailGeneration(TestCase):
         emails = get_user_emails(user, EmailVisiblity.VISIBLE)
         emailLen1 = len(emails)
 
-        emails[0].hidden = True
+        emails[0].visibility = EmailVisiblity.HIDDEN
         emails[0].save()
 
         emails2 = get_user_emails(user, EmailVisiblity.VISIBLE)
@@ -206,7 +206,7 @@ class TestEmailGeneration(TestCase):
 
     def test_shouldNotDisplayDeletedEmails(self):
         """
-        Users should be able to hide emails 
+        Users should be able to delete emails 
         """
 
         registerAndLogin(self)
@@ -219,10 +219,28 @@ class TestEmailGeneration(TestCase):
         emails = get_user_emails(user, EmailVisiblity.VISIBLE)
         emailLen1 = len(emails)
 
-        emails[0].deleted = True
+        emails[0].visibility = EmailVisiblity.DELETED
         emails[0].save()
 
         emails2 = get_user_emails(user, EmailVisiblity.VISIBLE)
         emailLen2 = len(emails2)
 
-        self.assertNotEqual(emailLen1, emailLen2, "Hiding email did not remove from view")
+        self.assertNotEqual(emailLen1, emailLen2, "Deleting email did not remove from view")
+
+    def test_shouldNotBeAbleToChangeEmailVisibilityBeyond8(self):
+        """
+        Users should be able to delete emails 
+        """
+
+        registerAndLogin(self)
+
+        addEmail(self)
+        addEmail(self)
+
+        user = auth.get_user(self.client)
+
+        emails = get_user_emails(user, EmailVisiblity.VISIBLE)
+        emailLen1 = len(emails)
+
+        emails[0].visibility = 9
+        self.assertRaises(ValidationError, emails[0].full_clean)
