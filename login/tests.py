@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from django.contrib import auth
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from http import HTTPStatus
 
 validUsername = "testuser"
 validEmail = "testuser@gmail.com"
@@ -207,3 +208,82 @@ class TestInputValidation(TestCase):
         registerAndLogin(self, username=validUsername2, password=validPassword, email=validEmail2)
 
         self.assertEquals(User.objects.count(), 2, "Could not register two accounts with same password")
+
+    def test_shouldNotBeAbleToRegisterWhileLoggedIn(self):
+        """
+        Users should not be able to register a new account while already logged in
+        """
+
+        registerAndLogin(self)
+
+        response = self.client.post(reverse('signup'),
+                                    {'username': validUsername2, 'email': validEmail2, 'password1': validPassword2,
+                                     'password2': validPassword2})
+
+        self.assertEquals(len(User.objects.all()), 1, "Created account while already logged in")
+
+    def test_registeringWhileLoggedInShouldReturn401Unauthorized(self):
+        """
+        Users should not be able to register a new account while already logged in, instead they should get a 401 unauthorized
+        """
+
+        registerAndLogin(self)
+
+        response = self.client.post(reverse('signup'),
+                                    {'username': validUsername2, 'email': validEmail2, 'password1': validPassword2,
+                                     'password2': validPassword2})
+
+        self.assertEquals(HTTPStatus(response.status_code), HTTPStatus.UNAUTHORIZED,
+                          "Registering a new account while already logged in did not return a status code {}".format(
+                              HTTPStatus.UNAUTHORIZED))
+
+    def test_registeringWhileLoggedInShouldRemainLoggedIn(self):
+        """
+        Users should remain logged in when attempting to register a new account while already logged in
+        """
+
+        registerAndLogin(self)
+
+        self.client.post(reverse('signup'),
+                         {'username': validUsername2, 'email': validEmail2, 'password1': validPassword2,
+                          'password2': validPassword2})
+
+        user = auth.get_user(self.client)
+
+        self.assertTrue(user.is_authenticated(),
+                        "Registering a new account while already logged in deleted session")
+
+    def test_registeringWhileLoggedInShouldRemainLoggedInToSameAccount(self):
+        """
+        Users should remain logged in to the same account when attempting to register a new account while already logged in
+        """
+
+        registerAndLogin(self)
+
+        originalUser = auth.get_user(self.client)
+
+        self.client.post(reverse('signup'),
+                         {'username': validUsername2, 'email': validEmail2, 'password1': validPassword2,
+                          'password2': validPassword2})
+
+        newUser = auth.get_user(self.client)
+
+        self.assertEquals(originalUser.id, newUser.id,
+                          "Registering a new account while already logged in login session")
+
+    def test_shouldNotBeAbleToLogInWhileLoggedIn(self):
+        """
+        Users should not be able to log in while already logged in
+        """
+
+        User.objects.create_user(validUsername2, validEmail2, validPassword2)
+
+        response = registerAndLogin(self)
+
+        oldUser = auth.get_user(self.client)
+
+        logIn(self, validUsername2, validPassword2)
+
+        newUser = auth.get_user(self.client)
+
+        self.assertEquals(oldUser, newUser, "Logged into an account while already logged in")

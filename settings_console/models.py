@@ -9,6 +9,8 @@ class GeneratedEmail(models.Model):
     email = models.CharField(max_length=50)
     user = models.ForeignKey(User)
     enabled = models.BooleanField(default=True)
+    hidden = models.BooleanField(default=False)
+    deleted= models.BooleanField(default=False)
     class Meta:
         ordering = ['-id']
 

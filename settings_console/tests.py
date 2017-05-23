@@ -1,14 +1,12 @@
-from django.test import TestCase
-from django.contrib import auth
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
 from settings_console.models import GeneratedEmail
-from http import HTTPStatus
 from login.tests import *
+from settings_console.views import get_user_emails, EmailVisiblity
 
-def addEmail(self, description):
+def addEmail(self, description=None):
 
-    return self.client.get("/ajax/add_email/", data={'description': description})
+    _email = description if description is not None else validEmailDescription
+
+    return self.client.get("/ajax/add_email/", data={'description': _email})
 
 def toggleEmail(self, id):
 
@@ -23,7 +21,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
 
@@ -36,7 +34,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         user = auth.get_user(self.client)
         emails = GeneratedEmail.objects.filter(user_id=user.id)
@@ -48,7 +46,7 @@ class TestEmailGeneration(TestCase):
         Users should not be able to generate a new email while not logged in
         """
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
         self.assertTrue(len(emails) == 0, "Generated email for unauthorized user")
@@ -76,7 +74,7 @@ class TestEmailGeneration(TestCase):
         registerAndLogin(self)
 
         for i in range(2):
-            addEmail(self, validEmailDescription)
+            addEmail(self, description=validEmailDescription)
 
         emails = GeneratedEmail.objects.all()
 
@@ -90,7 +88,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         email = GeneratedEmail.objects.all()[0]
 
@@ -108,7 +106,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         email = GeneratedEmail.objects.all()[0]
 
@@ -127,13 +125,13 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         logOut(self)
 
         registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         email = GeneratedEmail.objects.all().order_by("-id")[1] # Emails ordered by id ascending
 
@@ -151,7 +149,7 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         logOut(self)
 
@@ -171,81 +169,60 @@ class TestEmailGeneration(TestCase):
 
         registerAndLogin(self)
 
-        addEmail(self, validEmailDescription)
+        addEmail(self)
 
         logOut(self)
 
         registerAndLogin(self, username=validUsername2, password=validPassword2, email=validEmail2)
-        addEmail(self, validEmailDescription)
+        addEmail(self, description=validEmailDescription)
 
         email1 = GeneratedEmail.objects.all()[0]
         email2 = GeneratedEmail.objects.all()[1]
 
         self.assertNotEqual(email1.user_id, email2.user_id, "Different users generated emails with same user id")
 
-    def test_shouldNotBeAbleToRegisterWhileLoggedIn(self):
+    def test_shouldNotDisplayHiddenEmails(self):
         """
-        Users should not be able to register a new account while already logged in
-        """
-
-        registerAndLogin(self)
-
-        response = self.client.post(reverse('signup'), { 'username': validUsername2, 'email': validEmail2, 'password1': validPassword2, 'password2': validPassword2})
-
-        self.assertEquals(len(User.objects.all()), 1, "Created account while already logged in")
-
-    def test_registeringWhileLoggedInShouldReturn401Unauthorized(self):
-        """
-        Users should not be able to register a new account while already logged in, instead they should get a 401 unauthorized
+        Users should be able to hide emails 
         """
 
         registerAndLogin(self)
 
-        response = self.client.post(reverse('signup'), { 'username': validUsername2, 'email': validEmail2, 'password1': validPassword2, 'password2': validPassword2})
-
-        self.assertEquals(HTTPStatus(response.status_code), HTTPStatus.UNAUTHORIZED, "Registering a new account while already logged in did not return a status code {}".format(HTTPStatus.UNAUTHORIZED))
-
-    def test_registeringWhileLoggedInShouldRemainLoggedIn(self):
-        """
-        Users should remain logged in when attempting to register a new account while already logged in
-        """
-
-        registerAndLogin(self)
-
-        self.client.post(reverse('signup'), { 'username': validUsername2, 'email': validEmail2, 'password1': validPassword2, 'password2': validPassword2})
+        addEmail(self)
+        addEmail(self)
 
         user = auth.get_user(self.client)
 
-        self.assertTrue(user.is_authenticated(), "Registering a new account while already logged in deleted session")
+        emails = get_user_emails(user, EmailVisiblity.VISIBLE)
+        emailLen1 = len(emails)
 
-    def test_registeringWhileLoggedInShouldRemainLoggedInToSameAccount(self):
+        emails[0].hidden = True
+        emails[0].save()
+
+        emails2 = get_user_emails(user, EmailVisiblity.VISIBLE)
+        emailLen2 = len(emails2)
+
+        self.assertNotEqual(emailLen1, emailLen2, "Hiding email did not remove from view")
+
+    def test_shouldNotDisplayDeletedEmails(self):
         """
-        Users should remain logged in to the same account when attempting to register a new account while already logged in
+        Users should be able to hide emails 
         """
 
         registerAndLogin(self)
 
-        originalUser = auth.get_user(self.client)
+        addEmail(self)
+        addEmail(self)
 
-        self.client.post(reverse('signup'), { 'username': validUsername2, 'email': validEmail2, 'password1': validPassword2, 'password2': validPassword2})
+        user = auth.get_user(self.client)
 
-        newUser = auth.get_user(self.client)
+        emails = get_user_emails(user, EmailVisiblity.VISIBLE)
+        emailLen1 = len(emails)
 
-        self.assertEquals(originalUser.id, newUser.id, "Registering a new account while already logged in login session")
+        emails[0].deleted = True
+        emails[0].save()
 
-    def test_shouldNotBeAbleToLogInWhileLoggedIn(self):
-        """
-        Users should not be able to log in while already logged in
-        """
+        emails2 = get_user_emails(user, EmailVisiblity.VISIBLE)
+        emailLen2 = len(emails2)
 
-        User.objects.create_user(validUsername2, validEmail2, validPassword2)
-
-        response = registerAndLogin(self)
-
-        oldUser = auth.get_user(self.client)
-
-        logIn(self, validUsername2, validPassword2)
-
-        newUser = auth.get_user(self.client)
-
-        self.assertEquals(oldUser, newUser, "Logged into an account while already logged in")
+        self.assertNotEqual(emailLen1, emailLen2, "Hiding email did not remove from view")
