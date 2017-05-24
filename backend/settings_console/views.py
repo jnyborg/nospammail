@@ -3,6 +3,11 @@ from settings_console.generateemail import generateRandomEmail
 from settings_console.models import GeneratedEmail, EmailVisiblity
 from django.http import HttpResponse
 from http import HTTPStatus
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 
 from enum import IntEnum
 
@@ -56,3 +61,20 @@ def get_user_emails(user, visibility):
         return GeneratedEmail.objects.filter(user_id=user.id, visibility=visibility)
     else:
         raise Exception("Invalid visibility: {}".format(visibility))
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Re-validates session so user does not have to log in again
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('change_password')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'account/change_password.html', {
+        'form': form
+    })

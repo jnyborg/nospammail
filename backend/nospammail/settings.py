@@ -23,6 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'k-+klg*(w#xyhx6(i%h%x)c%7!hek^2bm!@t3!79!ab%)=-bwi'
 
 LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
